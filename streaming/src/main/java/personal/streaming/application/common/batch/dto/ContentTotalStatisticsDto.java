@@ -3,6 +3,9 @@ package personal.streaming.application.common.batch.dto;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Builder;
 import lombok.Getter;
+import personal.streaming.application.common.batch.domain.ContentDailyStatistics;
+
+import java.time.LocalDate;
 
 @Getter
 public class ContentTotalStatisticsDto {
@@ -17,6 +20,8 @@ public class ContentTotalStatisticsDto {
     private Long totalIncome;
     private Long totalContentPlayTime;
 
+    private LocalDate lastUpdate;
+
     @Builder
     @QueryProjection
     public ContentTotalStatisticsDto(
@@ -26,7 +31,8 @@ public class ContentTotalStatisticsDto {
             Long totalContentView,
             Long totalAdView,
             Long totalIncome,
-            Long totalContentPlayTime
+            Long totalContentPlayTime,
+            LocalDate lastUpdate
     ) {
         this.id = id;
         this.contentPostId = contentPostId;
@@ -35,6 +41,7 @@ public class ContentTotalStatisticsDto {
         this.totalAdView = totalAdView;
         this.totalIncome = totalIncome;
         this.totalContentPlayTime = totalContentPlayTime;
+        this.lastUpdate = lastUpdate;
     }
 
     public void addTotalContentView(long totalContentView) {
@@ -50,5 +57,16 @@ public class ContentTotalStatisticsDto {
     }
     public void addTotalContentPlayTime(long totalContentPlayTime) {
         this.totalContentPlayTime += totalContentPlayTime;
+    }
+    public void updateLastUpdate(LocalDate lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
+    public void rollback(ContentDailyStatistics dailyStatistics) {
+        this.totalAdView -= dailyStatistics.getAdViewCount();
+        this.totalContentView -= dailyStatistics.getViews();
+        this.totalIncome -= dailyStatistics.getAdIncome() + dailyStatistics.getContentIncome();
+        this.totalContentPlayTime -= dailyStatistics.getPlayTime();
+        this.lastUpdate = null;
     }
 }

@@ -8,37 +8,52 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import personal.streaming.application.common.batch.dto.ContentTotalStatisticsDto;
 import personal.streaming.application.common.batch.dto.ContentDailyStatisticsDto;
-import personal.streaming.application.common.batch.dto.HistoryAggregation;
 import personal.streaming.application.common.batch.util.CalculateIncomeFromViews;
+import personal.streaming.content_post_watch_history.domain.ContentPostWatchHistory;
 import personal.streaming.content_post_watch_history.repository.QContentPostWatchHistoryRepository;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @Component
 @StepScope
 @RequiredArgsConstructor
-public class ContentStatisticsProcessor implements ItemProcessor<ContentTotalStatisticsDto, ContentDailyStatisticsDto> {
+public class DailyStatisticsProcessor implements ItemProcessor<ContentTotalStatisticsDto, ContentDailyStatisticsDto> {
 
     private final QContentPostWatchHistoryRepository qContentPostWatchHistoryRepository;
 
     @Value("#{jobParameters['today']}")
     private String today;
 
+    @Value("${spring.batch.size}")
+    private int batchSize;
+
     @Override
     public ContentDailyStatisticsDto process(ContentTotalStatisticsDto item) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        LocalDate watchedDate = LocalDate.parse(today, formatter);
-
+        // JobParameter 에서 값 가져와서 변환
+        LocalDate watchedDate = LocalDate.parse(today, DateTimeFormatter.ISO_LOCAL_DATE);
         ContentDailyStatisticsDto dto
-                = new ContentDailyStatisticsDto(item.getContentPostId(), item.getUserId(), watchedDate, item);
+                = ContentDailyStatisticsDto.builder()
+                .contentPostId(item.getContentPostId())
+                .userId(item.getUserId())
+                .date(watchedDate)
+                .build();
 
-        // DB 에서 sum 한 값 매핑해서 select
-        HistoryAggregation aggregate = qContentPostWatchHistoryRepository.aggregateHistoryById(item.getContentPostId(), watchedDate);
+        long start = System.currentTimeMillis();
+        // log data cursor
+        List<ContentPostWatchHistory> histories;
+        long cursor = 0L;
+        do {
+            histories = qContentPostWatchHistoryRepository.findAllByContentId(item.getContentPostId(), watchedDate, cursor);
 
-        // 일일 조회수 재생 시간 정산
-        dto.countingViewsAndPlaytime(aggregate);
+            if (!histories.isEmpty()) {
+                histories.forEach(dto::merge); // merge data
+                cursor = histories.getLast().getId();
+            }
+        } while (!histories.isEmpty() && histories.size() == batchSize);
+        log.info("aggregate = {} ms", System.currentTimeMillis() - start);
 
         // 수입 정산
         CalculateIncomeFromViews.updateCalculatedIncomeAndTotalViews(item, dto);

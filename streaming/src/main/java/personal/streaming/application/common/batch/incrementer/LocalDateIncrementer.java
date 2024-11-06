@@ -12,14 +12,13 @@ import java.time.format.DateTimeFormatter;
 @Component
 public class LocalDateIncrementer implements JobParametersIncrementer {
 
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-
     @Override
     public JobParameters getNext(JobParameters parameters) {
-        String today = LocalDate.now().minusDays(1).format(formatter);
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        String yesterdayAsString = yesterday.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
         return new JobParametersBuilder(parameters)
-                .addString("today", today)
+                .addString("today", yesterdayAsString)
                 .toJobParameters();
     }
 }

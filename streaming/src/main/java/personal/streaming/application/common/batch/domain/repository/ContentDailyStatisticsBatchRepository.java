@@ -7,7 +7,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import personal.streaming.application.common.batch.dto.ContentDailyStatisticsDto;
+import personal.streaming.application.common.batch.dto.ContentDailyStatisticsSimpleDto;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
@@ -47,6 +49,28 @@ public class ContentDailyStatisticsBatchRepository {
                 ps.setLong(6, dto.getAdIncome());
                 ps.setLong(7, dto.getPlayTime());
                 ps.setLong(8, dto.getAdViews());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return contentDailyStatisticsDtoList.size();
+            }
+        });
+    }
+
+    @Transactional
+    public void delete(final List<ContentDailyStatisticsSimpleDto> contentDailyStatisticsDtoList) {
+        String SQL = """
+            DELETE FROM content_daily_statistics
+            WHERE content_post_id = ? AND date = ?
+            """;
+
+        jdbcTemplate.batchUpdate(SQL, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ContentDailyStatisticsSimpleDto dto = contentDailyStatisticsDtoList.get(i);
+                ps.setLong(1, dto.getContentPostId());
+                ps.setDate(2, Date.valueOf(dto.getDate()));
             }
 
             @Override

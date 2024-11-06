@@ -1,49 +1,55 @@
 package personal.streaming.application.common.batch.dto;
 
+import lombok.Builder;
 import lombok.Getter;
+import personal.streaming.content_post_watch_history.domain.ContentPostWatchHistory;
 
 import java.time.LocalDate;
 
 @Getter
 public class ContentDailyStatisticsDto {
 
-   private final Long contentPostId;
-   private final Long userId;
-   private final LocalDate date;
-   private final ContentTotalStatisticsDto contentTotalStatisticsDto;
+    private Long id;
 
-   private Long views;
-   private Long adViews;
-   private Long playTime;
-   private Long contentIncome;
-   private Long adIncome;
+    private Long contentPostId;
+    private Long userId;
+    private LocalDate date;
+
+    private Long views = 0L;
+    private Long adViews = 0L;
+    private Long playTime = 0L;
+    private Long contentIncome = 0L;
+    private Long adIncome = 0L;
 
 
-   public ContentDailyStatisticsDto(
-           Long contentPostId,
-           Long userId,
-           LocalDate date,
-           ContentTotalStatisticsDto contentTotalStatisticsDto
-   ) {
-       this.contentPostId = contentPostId;
-       this.userId = userId;
-       this.date = date;
-       this.contentTotalStatisticsDto = contentTotalStatisticsDto;
-       this.views = 0L;
-       this.adViews = 0L;
-       this.playTime = 0L;
-       this.contentIncome = 0L;
-       this.adIncome = 0L;
-   }
 
-   public void countingViewsAndPlaytime(HistoryAggregation aggregation) {
+    @Builder
+    public ContentDailyStatisticsDto(
+            Long id,
+            Long contentPostId,
+            Long userId,
+            LocalDate date
+    ) {
+        this.id = id;
+        this.contentPostId = contentPostId;
+        this.userId = userId;
+        this.date = date;
+    }
+
+    public void countingViewsAndPlaytime(HistoryAggregation aggregation) {
        this.views = aggregation.getContentViews();
        this.adViews = aggregation.getAdViews();
        this.playTime = aggregation.getPlaytime();
-   }
+    }
+
+    public void merge(ContentPostWatchHistory contentPostWatchHistory) {
+       this.views += 1L;
+       this.adViews += contentPostWatchHistory.getAdViews();
+       this.playTime += contentPostWatchHistory.getPlayTime();
+    }
 
     public void updateAdIncome(long adDailyIncome) {
-           this.adIncome += adDailyIncome;
+       this.adIncome += adDailyIncome;
     }
 
     public void updateContentIncome(long contentDailyIncome) {
