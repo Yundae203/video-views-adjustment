@@ -9,8 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import personal.streaming.application.common.batch.domain.ContentTotalStatistics;
 import personal.streaming.application.common.batch.dto.ContentTotalStatisticsDto;
 
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 
 @Slf4j
@@ -29,9 +31,10 @@ public class ContentTotalStatisticsBatchRepository {
                                       total_content_view, 
                                       total_ad_view, 
                                       total_income, 
-                                      total_content_play_time
+                                      total_content_play_time,
+                                      last_update
                       )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
 
         jdbcTemplate.batchUpdate(SQL, new BatchPreparedStatementSetter() {
@@ -44,6 +47,11 @@ public class ContentTotalStatisticsBatchRepository {
                 ps.setLong(4, stats.getTotalAdView());
                 ps.setLong(5, stats.getTotalIncome());
                 ps.setLong(6, stats.getTotalContentPlayTime());
+                if (stats.getLastUpdate() != null) {
+                    ps.setDate(7, Date.valueOf(stats.getLastUpdate()));
+                } else {
+                    ps.setNull(7, Types.DATE);
+                }
             }
 
             @Override
@@ -61,7 +69,8 @@ public class ContentTotalStatisticsBatchRepository {
                 total_content_view = ?, 
                 total_ad_view = ?, 
                 total_income = ?, 
-                total_content_play_time = ?
+                total_content_play_time = ?,
+                last_update = ?
             WHERE 
                 id = ?
             """;
@@ -70,12 +79,17 @@ public class ContentTotalStatisticsBatchRepository {
 
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
-                ContentTotalStatisticsDto statsDto = contentTotalStatisticsDto.get(i);
-                ps.setLong(1, statsDto.getTotalContentView());
-                ps.setLong(2, statsDto.getTotalAdView());
-                ps.setLong(3, statsDto.getTotalIncome());
-                ps.setLong(4, statsDto.getTotalContentPlayTime());
-                ps.setLong(5, statsDto.getId());
+                ContentTotalStatisticsDto stats = contentTotalStatisticsDto.get(i);
+                ps.setLong(1, stats.getTotalContentView());
+                ps.setLong(2, stats.getTotalAdView());
+                ps.setLong(3, stats.getTotalIncome());
+                ps.setLong(4, stats.getTotalContentPlayTime());
+                if (stats.getLastUpdate() != null) {
+                    ps.setDate(5, Date.valueOf(stats.getLastUpdate()));
+                } else {
+                    ps.setNull(5, Types.DATE);
+                }
+                ps.setLong(6, stats.getId());
             }
 
             @Override

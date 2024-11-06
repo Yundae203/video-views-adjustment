@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,6 +26,8 @@ public class ContentTotalStatistics {
     private Long totalIncome;
     private Long totalContentPlayTime;
 
+    private LocalDate lastUpdate;
+
     @Builder
     public ContentTotalStatistics(
             Long id,
@@ -32,7 +36,8 @@ public class ContentTotalStatistics {
             Long totalContentView,
             Long totalAdView,
             Long totalIncome,
-            Long totalContentPlayTime
+            Long totalContentPlayTime,
+            LocalDate lastUpdate
     ) {
         this.id = id;
         this.contentPostId = contentPostId;
@@ -41,6 +46,7 @@ public class ContentTotalStatistics {
         this.totalAdView = totalAdView;
         this.totalIncome = totalIncome;
         this.totalContentPlayTime = totalContentPlayTime;
+        this.lastUpdate = lastUpdate;
     }
 
     public void addTotalContentView(long totalContentView) {

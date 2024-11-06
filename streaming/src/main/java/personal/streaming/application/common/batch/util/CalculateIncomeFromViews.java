@@ -33,16 +33,12 @@ public class CalculateIncomeFromViews {
         long contentDailyIncome = calculateContentIncome(totalContentView) - calculateContentIncome(totalStatisticsDto.getTotalContentView());
         long adDailyIncome = calculateAdIncome(totalAdView) - calculateAdIncome(totalStatisticsDto.getTotalAdView());
 
-        log.info("contentDailyView = {}, adDailyView = {}", dailyStatistics.getViews(), dailyStatistics.getAdViews());
+        log.info("contentDailyView = {}, adDailyView = {}, playTime = {}",
+                dailyStatistics.getViews(), dailyStatistics.getAdViews(), dailyStatistics.getPlayTime());
         log.info("contentIncome = {}, adIncome = {}", contentDailyIncome, adDailyIncome);
 
         dailyStatistics.updateContentIncome(contentDailyIncome);
         dailyStatistics.updateAdIncome(adDailyIncome);
-
-        totalStatisticsDto.addTotalContentView(totalContentView);
-        totalStatisticsDto.addTotalAdView(totalAdView);
-        totalStatisticsDto.addTotalContentPlayTime(totalContentView);
-        totalStatisticsDto.addTotalIncome(contentDailyIncome + adDailyIncome);
     }
 
     private static long calculateContentIncome(long views) {
